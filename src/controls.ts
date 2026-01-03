@@ -1,7 +1,8 @@
 import { player } from './player';
+import { setVolume, adjustVolume, promptForVolumeInput, VOLUME_STEP, handleVolumeChange } from './volume';
 import * as vscode from 'vscode';
 import { addLastToNextAndPlay, addToNextAndPlay } from './nextsongs';
-import { togglePauseButton } from './statusBar';
+import { togglePauseButton, updateVolumeIndicator } from './statusBar';
 
 export function controls(context: vscode.ExtensionContext) {
     let togglePause = vscode.commands.registerCommand(
@@ -49,6 +50,19 @@ export function controls(context: vscode.ExtensionContext) {
         }
     );
 
+    let setVolumeCommand = vscode.commands.registerCommand('MudePlayer.setVolume', async () => {
+        const result: number = await promptForVolumeInput();
+        await handleVolumeChange(context, () => setVolume(result), updateVolumeIndicator);
+    });
+
+    let volumeUpCommand = vscode.commands.registerCommand('MudePlayer.volumeUp', async () => {
+        await handleVolumeChange(context, () => adjustVolume(VOLUME_STEP), updateVolumeIndicator);
+    });
+
+    let volumeDownCommand = vscode.commands.registerCommand('MudePlayer.volumeDown', async () => {
+        await handleVolumeChange(context, () => adjustVolume(-VOLUME_STEP), updateVolumeIndicator);
+    });
+
 
     context.subscriptions.push(
         seekForward,
@@ -56,5 +70,8 @@ export function controls(context: vscode.ExtensionContext) {
         togglePause,
         playNext,
         playPrevious,
+        setVolumeCommand,
+        volumeUpCommand,
+        volumeDownCommand,
     );
 }
