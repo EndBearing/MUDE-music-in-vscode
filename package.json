@@ -50,6 +50,21 @@
         "command": "MudePlayer.playPrevious",
         "title": "Play Previous Track",
         "category": "MUDE"
+      },
+      {
+        "command": "MudePlayer.volumeUp",
+        "title": "Increase Volume",
+        "category": "MUDE"
+      },
+      {
+        "command": "MudePlayer.volumeDown",
+        "title": "Decrease Volume",
+        "category": "MUDE"
+      },
+      {
+        "command": "MudePlayer.setVolume",
+        "title": "Set Volume",
+        "category": "MUDE"
       }
     ]
   },
