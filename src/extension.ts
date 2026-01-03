@@ -24,7 +24,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	statusBar(context);
 
 	// Check if MPV is already playing something
-	const hasMedia = await player.getProperty('media-title');
+	let hasMedia: string | undefined;
+	try {
+		hasMedia = await player.getProperty('media-title');
+	} catch (err) {
+		console.warn('Could not read media-title from MPV (property unavailable)', err);
+		hasMedia = undefined;
+	}
 	
 	// If no media is playing, try to restore the last played file
 	if (!hasMedia) {
