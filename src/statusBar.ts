@@ -4,6 +4,7 @@ import { getVolume, VOLUME_STATE_KEY, VOLUME_STEP } from './volume';
 import { searchYoutube } from './searchYoutube';
 import { recommendations, currentRecommendationIndex } from './recommendations';
 import { updateRecommendationIndex } from './recommendations';
+import { getActivePlaylistState, getPlaybackMode } from './playlistState';
 
 export let togglePauseButton: vscode.StatusBarItem;
 export let seekForwardButton: vscode.StatusBarItem;
@@ -16,7 +17,9 @@ export let logoButton: vscode.StatusBarItem;
 export let volumeButton: vscode.StatusBarItem;
 export let volumeUpButton: vscode.StatusBarItem;
 export let volumeDownButton: vscode.StatusBarItem;
+export let playlistButton: vscode.StatusBarItem;
 
+let statusBarContext: vscode.ExtensionContext | undefined;
 
 
 function formatVolumeLabel(volume: number) {
@@ -39,6 +42,7 @@ export function updateVolumeIndicator(volume: number) {
 }
 
 export async function statusBar(context: vscode.ExtensionContext) {
+    statusBarContext = context;
     seekBackwordButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 185);
     seekBackwordButton.command = 'MudePlayer.seekBackword';
     seekBackwordButton.text = '$(chevron-left)';
@@ -71,6 +75,11 @@ export async function statusBar(context: vscode.ExtensionContext) {
     timestampButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 170);
     timestampButton.text = '';
     // timestampButton.show();
+
+    playlistButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 169.5);
+    playlistButton.command = 'MudePlayer.selectPlaylist';
+    updatePlaylistButton(context);
+    playlistButton.show();
 
     const configVolume = vscode.workspace.getConfiguration('mude').get<number>('volume', 70);
     const storedVolume = context.globalState.get<number>(VOLUME_STATE_KEY, configVolume);
@@ -106,6 +115,7 @@ export async function statusBar(context: vscode.ExtensionContext) {
         playNextButton,
         youtubeLabelButton,
         timestampButton,
+        playlistButton,
         volumeDownButton,
         volumeButton,
         volumeUpButton,
@@ -113,6 +123,9 @@ export async function statusBar(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('extension.refreshYoutubeLabelButton', () => {
             let newValue = context.globalState.get<string>('youtubeLabelButton', '');
             youtubeLabelButton.text = newValue;
+        }),
+        vscode.commands.registerCommand('extension.refreshPlaylistState', () => {
+            updatePlaylistButton(context);
         }),
         vscode.commands.registerCommand('extension.refreshRecommendations', () => {
             const newRecommendations = context.globalState.get<{ videoId: string, title: string }[]>('recommendations', []);
@@ -138,6 +151,7 @@ export async function statusBar(context: vscode.ExtensionContext) {
     // Listen for window state changes to refresh the status bar
     context.subscriptions.push(vscode.window.onDidChangeWindowState(() => {
         vscode.commands.executeCommand('extension.refreshYoutubeLabelButton');
+        vscode.commands.executeCommand('extension.refreshPlaylistState');
         vscode.commands.executeCommand('extension.refreshRecommendations');
         vscode.commands.executeCommand('extension.refreshState');
         vscode.commands.executeCommand('extension.refreshVolumeIndicator');
@@ -146,10 +160,19 @@ export async function statusBar(context: vscode.ExtensionContext) {
     // Initial state refresh
     vscode.commands.executeCommand('extension.refreshState');
     vscode.commands.executeCommand('extension.refreshVolumeIndicator');
+    vscode.commands.executeCommand('extension.refreshPlaylistState');
 }
 
 // Function to get the tooltip for the next recommendation
 function getNextRecommendationTooltip(): string {
+    if (statusBarContext && getPlaybackMode(statusBarContext) === 'playlist') {
+        const state = getActivePlaylistState(statusBarContext);
+        if (state && state.currentIndex + 1 < state.tracks.length) {
+            return `Playlist next: ${state.tracks[state.currentIndex + 1].title}`;
+        }
+        return 'Playlist: no upcoming track';
+    }
+
     const nextIndex = currentRecommendationIndex;
     if (nextIndex < recommendations.length) {
         return `Up next: ${recommendations[nextIndex].title}`;
@@ -157,8 +180,15 @@ function getNextRecommendationTooltip(): string {
     return 'Play next';
 }
 
-// Function to get the tooltip for the previous recommendation
 function getPreviousRecommendationTooltip(): string {
+    if (statusBarContext && getPlaybackMode(statusBarContext) === 'playlist') {
+        const state = getActivePlaylistState(statusBarContext);
+        if (state && state.currentIndex - 1 >= 0) {
+            return `Playlist previous: ${state.tracks[state.currentIndex - 1].title}`;
+        }
+        return 'Playlist: no previous track';
+    }
+
     const prevIndex = currentRecommendationIndex - 1;
     if (prevIndex >= 0) {
         return `Play previous: ${recommendations[prevIndex].title}`;
@@ -186,8 +216,42 @@ player.on('stopped', async () => {
 
 // Function to update both next and previous buttons' tooltips
 function updateTooltips() {
+    if (!playNextButton || !playPreviousButton) {
+        return;
+    }
     playNextButton.tooltip = getNextRecommendationTooltip();
     playPreviousButton.tooltip = getPreviousRecommendationTooltip();
+    updatePlaylistButton();
+}
+
+function updatePlaylistButton(context?: vscode.ExtensionContext) {
+    if (!playlistButton) {
+        return;
+    }
+
+    const targetContext = context ?? statusBarContext;
+    if (!targetContext) {
+        playlistButton.text = '$(list-ordered) Playlist';
+        playlistButton.tooltip = 'Select a playlist to play';
+        playlistButton.show();
+        return;
+    }
+
+    const mode = getPlaybackMode(targetContext);
+    const state = getActivePlaylistState(targetContext);
+
+    if (mode === 'playlist' && state) {
+        const total = state.tracks.length;
+        const position = total ? `${state.currentIndex + 1}/${total}` : '0/0';
+        const title = state.playlist.title || 'Playlist';
+        playlistButton.text = `$(list-ordered) ${title}`;
+        playlistButton.tooltip = `Playlist mode (${position}). Click to switch.`;
+    } else {
+        playlistButton.text = '$(list-ordered) Playlist';
+        playlistButton.tooltip = 'Select a playlist to play';
+    }
+
+    playlistButton.show();
 }
 
 export async function playingState(context: vscode.ExtensionContext) {

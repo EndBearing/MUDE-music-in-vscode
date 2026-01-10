@@ -4,6 +4,7 @@ import { player } from './player';
 import { controls } from './controls';
 import { statusBar, youtubeLabelButton, stoppedState, playingState } from './statusBar';
 import * as fs from "fs";
+import { playlistCommands } from './playlistCommands';
 
 export async function activate(context: vscode.ExtensionContext) {
 	if (!fs.existsSync(context.globalStorageUri.fsPath)) {
@@ -20,6 +21,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 	searchMusic(context);
+	playlistCommands(context);
 	controls(context);
 	statusBar(context);
 

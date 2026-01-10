@@ -6,6 +6,8 @@ import { player } from './player';
 import { getRecommendations } from './getRecommendations';
 import { recommendations, currentRecommendationIndex, resetRecommendations, addRecommendation, updateRecommendationIndex } from './recommendations';
 import * as path from 'path';
+import { clearActivePlaylistState, getPlaybackMode, setPlaybackMode } from './playlistState';
+import { playNextPlaylistTrack } from './playlistPlayback';
 
 let currentStopHandler: (() => void) | null = null;
 
@@ -24,6 +26,10 @@ export async function searchYoutube(context: vscode.ExtensionContext) {
     if (!pick) {
         return;
     }
+    
+    await clearActivePlaylistState(context);
+    await setPlaybackMode(context, 'search');
+    vscode.commands.executeCommand('extension.refreshPlaylistState');
     
     console.log("Search pick:", pick);
     // @ts-expect-error
@@ -52,7 +58,7 @@ export async function searchYoutube(context: vscode.ExtensionContext) {
     await processTrack(context, baseurl, pick.label, ytmusicurl);
 }
 
-export async function processTrack(context: vscode.ExtensionContext, url: string, title: string, ytmusicurl: string) {
+export async function processTrack(context: vscode.ExtensionContext, url: string, title: string, ytmusicurl: string): Promise<boolean> {
     await stoppedState(context); // Ensure stopped state is shown while downloading
     const downloadPath = getDownloadPath(context);
 
@@ -74,10 +80,12 @@ export async function processTrack(context: vscode.ExtensionContext, url: string
         await player.play();
 
         registerStopHandler(context);
+        return true;
     } catch (error) {
         console.error("Error processing track:", error);
         youtubeLabelButton.text = `$(error) Error loading ${title}`;
         await stoppedState(context);
+        return false;
     }
 }
 
@@ -88,6 +96,13 @@ function registerStopHandler(context: vscode.ExtensionContext) {
 
     currentStopHandler = async () => {
         await stoppedState(context);
+        const mode = getPlaybackMode(context);
+
+        if (mode === 'playlist') {
+            await playNextPlaylistTrack(context);
+            return;
+        }
+
         await context.globalState.update('youtubeLabelButton', `$(loading~spin) Loading next track...`);
         vscode.commands.executeCommand('extension.refreshYoutubeLabelButton');
 

@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { recommendations, currentRecommendationIndex, updateRecommendationIndex } from './recommendations'; // Import recommendations.ts
 import { processTrack } from './searchYoutube'; // Import processTrack from searchYoutube.ts
+import { getPlaybackMode } from './playlistState';
+import { playNextPlaylistTrack, playPreviousPlaylistTrack } from './playlistPlayback';
 
 export async function downloadAndPlayNext(context: vscode.ExtensionContext) {
     console.log(`End of playlist reached. Checking for recommendations.`);
@@ -22,7 +24,11 @@ export async function downloadAndPlayNext(context: vscode.ExtensionContext) {
     }
 }
 
-export function addToNextAndPlay(context: vscode.ExtensionContext) {
+export async function addToNextAndPlay(context: vscode.ExtensionContext) {
+    if (getPlaybackMode(context) === 'playlist') {
+        await playNextPlaylistTrack(context);
+        return;
+    }
     console.log(`End of playlist reached. Checking for recommendations.`);
     if (currentRecommendationIndex < recommendations.length) {
         const nextRecommendation = recommendations[currentRecommendationIndex];
@@ -35,14 +41,18 @@ export function addToNextAndPlay(context: vscode.ExtensionContext) {
 
         console.log(`Next recommendation:`, nextRecommendation);
         let ytmusicurl = `https://music.youtube.com/watch?v=${nextRecommendation.videoId}`;
-        processTrack(context, ytmusicurl, nextRecommendation.title, ytmusicurl); // Call your processTrack with the next recommendation
+        await processTrack(context, ytmusicurl, nextRecommendation.title, ytmusicurl); // Call your processTrack with the next recommendation
     } else {
         console.log(`No more tracks next in playlist or recommendations.`);
         vscode.window.showWarningMessage("No more tracks next in playlist or recommendations.");
     }
 }
 
-export function addLastToNextAndPlay(context: vscode.ExtensionContext) {
+export async function addLastToNextAndPlay(context: vscode.ExtensionContext) {
+    if (getPlaybackMode(context) === 'playlist') {
+        await playPreviousPlaylistTrack(context);
+        return;
+    }
     if (currentRecommendationIndex > 0) {
         const prevRecommendation = recommendations[currentRecommendationIndex - 1];
         updateRecommendationIndex(currentRecommendationIndex - 1);  // Update index globally
@@ -54,7 +64,7 @@ export function addLastToNextAndPlay(context: vscode.ExtensionContext) {
 
         console.log(`Previous recommendation:`, prevRecommendation);
         let ytmusicurl = `https://music.youtube.com/watch?v=${prevRecommendation.videoId}`;
-        processTrack(context, ytmusicurl, prevRecommendation.title, ytmusicurl); // Call your processTrack with the previous recommendation
+        await processTrack(context, ytmusicurl, prevRecommendation.title, ytmusicurl); // Call your processTrack with the previous recommendation
     } else {
         vscode.window.showWarningMessage("No tracks beyond in playlist or recommendations.");
     }

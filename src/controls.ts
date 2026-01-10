@@ -40,13 +40,13 @@ export function controls(context: vscode.ExtensionContext) {
     );
 
     let playNext = vscode.commands.registerCommand('MudePlayer.playNext', async () => {
-        addToNextAndPlay(context); // Pass context to the function
+        await addToNextAndPlay(context); // Pass context to the function
     });
 
     let playPrevious = vscode.commands.registerCommand(
         'MudePlayer.playPrevious',
         async () => {
-            addLastToNextAndPlay(context); // Pass context to the function
+            await addLastToNextAndPlay(context); // Pass context to the function
         }
     );
 

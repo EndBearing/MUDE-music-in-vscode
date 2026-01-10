@@ -65,6 +65,26 @@
         "command": "MudePlayer.setVolume",
         "title": "Set Volume",
         "category": "MUDE"
+      },
+      {
+        "command": "MudePlayer.addPlaylistUrl",
+        "title": "Add Playlist URL",
+        "category": "MUDE"
+      },
+      {
+        "command": "MudePlayer.selectPlaylist",
+        "title": "Select Playlist",
+        "category": "MUDE"
+      },
+      {
+        "command": "MudePlayer.refreshPlaylist",
+        "title": "Refresh Active Playlist",
+        "category": "MUDE"
+      },
+      {
+        "command": "MudePlayer.exitPlaylistMode",
+        "title": "Exit Playlist Mode",
+        "category": "MUDE"
       }
     ]
   },
