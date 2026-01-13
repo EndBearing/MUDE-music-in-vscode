@@ -77,6 +77,11 @@
         "category": "MUDE"
       },
       {
+        "command": "MudePlayer.deletePlaylist",
+        "title": "Delete Playlists",
+        "category": "MUDE"
+      },
+      {
         "command": "MudePlayer.refreshPlaylist",
         "title": "Refresh Active Playlist",
         "category": "MUDE"
@@ -86,7 +91,17 @@
         "title": "Exit Playlist Mode",
         "category": "MUDE"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "MUDE",
+      "properties": {
+        "mudePlayer.notifyActivePlaylistDeletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a notification when the currently playing playlist is deleted."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

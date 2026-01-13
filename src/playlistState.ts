@@ -54,6 +54,32 @@ export async function updateSavedPlaylist(context: vscode.ExtensionContext, url:
     await context.globalState.update(SAVED_PLAYLISTS_KEY, next);
 }
 
+export async function removeSavedPlaylists(context: vscode.ExtensionContext, urls: string[]): Promise<SavedPlaylist[]> {
+    if (!urls.length) {
+        return [];
+    }
+
+    const urlSet = new Set(urls);
+    const playlists = getSavedPlaylists(context);
+    const remaining: SavedPlaylist[] = [];
+    const removed: SavedPlaylist[] = [];
+
+    for (const playlist of playlists) {
+        if (urlSet.has(playlist.url)) {
+            removed.push(playlist);
+        } else {
+            remaining.push(playlist);
+        }
+    }
+
+    if (!removed.length) {
+        return [];
+    }
+
+    await context.globalState.update(SAVED_PLAYLISTS_KEY, remaining);
+    return removed;
+}
+
 export function getActivePlaylistState(context: vscode.ExtensionContext): ActivePlaylistState | undefined {
     return context.globalState.get<ActivePlaylistState>(ACTIVE_PLAYLIST_STATE_KEY);
 }
