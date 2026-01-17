@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { player } from './player';
 
-const DEFAULT_VOLUME = 70;
+const DEFAULT_VOLUME = 50;
 let currentVolume = DEFAULT_VOLUME;
 
 export const VOLUME_STATE_KEY = 'volumeLevel';
