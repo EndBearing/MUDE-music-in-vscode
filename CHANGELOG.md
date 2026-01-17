@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.20]
+- Improved the deactivate function to ensure proper cleanup of MPV processes.
+- Added new playlist management features. 
+- Added new sound volume setting feature.
+
 ## [1.0.10]
 
 - Added new recently played feature [PR](https://github.com/mayur1377/MUDE-music-in-vscode/pull/3)
