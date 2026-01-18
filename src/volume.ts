@@ -65,6 +65,10 @@ export async function adjustVolume(delta: number): Promise<number> {
     return setVolume(currentVolume + delta);
 }
 
+export async function initializeVolume() {
+    return setVolume(DEFAULT_VOLUME);
+}
+
 /**
  * Handles volume changes by updating the volume state and notifying listeners.
  * 

@@ -5,6 +5,7 @@ import { controls } from './controls';
 import { statusBar, youtubeLabelButton, stoppedState, playingState } from './statusBar';
 import * as fs from "fs";
 import { playlistCommands } from './playlistCommands';
+import { initializeVolume } from './volume';
 
 export async function activate(context: vscode.ExtensionContext) {
 	if (!fs.existsSync(context.globalStorageUri.fsPath)) {
@@ -12,6 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 	try {
 		await player.start();
+        await initializeVolume(); // initialize volume to default value
 	} catch (error) {
 		console.log(error);
 		vscode.window.showErrorMessage("Failed to find MPV on your system!", {
